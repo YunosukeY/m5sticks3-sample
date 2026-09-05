@@ -1,9 +1,11 @@
 {
-  "$schema":  "https://raw.githubusercontent.com/jetify-com/devbox/0.18.0/.schema/devbox.schema.json",
-  "packages": ["platformio@6.1.19"],
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.18.0/.schema/devbox.schema.json",
+  "packages": [
+    "platformio@6.1.19"
+  ],
   "shell": {
     "scripts": {
-      "build": "pio run",
+      "build":  "pio run",
       "upload": "pio run --target upload"
     }
   }
