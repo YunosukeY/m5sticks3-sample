@@ -1,25 +1,29 @@
 #include <M5Unified.h>
 
+static bool beeping = false;
+
 void setup() {
   auto cfg = M5.config();
   M5.begin(cfg);
 
-  Serial.println("Press BtnA/B");
+  M5.Speaker.setVolume(255);
+
+  Serial.println("BtnA: toggle beep");
 }
 
 void loop() {
   M5.update();
 
-  // wasClicked() は長押し閾値(既定 500ms)未満で離したとき、
-  // wasHold() は押下が閾値を超えた時点で 1 度だけ true になる。
+  // wasClicked() は長押し閾値(既定 500ms)未満で離したときに true になる。
   if (M5.BtnA.wasClicked()) {
-    Serial.println("BtnA short");
-  } else if (M5.BtnA.wasHold()) {
-    Serial.println("BtnA long");
-  } else if (M5.BtnB.wasClicked()) {
-    Serial.println("BtnB short");
-  } else if (M5.BtnB.wasHold()) {
-    Serial.println("BtnB long");
+    beeping = !beeping;
+    if (beeping) {
+      // duration 省略時は停止するまで鳴り続ける。
+      M5.Speaker.tone(1000);
+    } else {
+      M5.Speaker.stop();
+    }
+    Serial.printf("beep: %s\n", beeping ? "on" : "off");
   }
 
   delay(10);
