@@ -12,11 +12,15 @@ struct StopwatchData {
 };
 
 inline void drawElapsed(uint32_t elapsed_ms) {
-  const uint32_t sec = elapsed_ms / 1000;
-  M5.Display.setTextSize(3);
+  // 経過なので切り捨てる。進んだ分だけを表示する。
+  const uint32_t tenth = elapsed_ms / 100;
   M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
-  M5.Display.setCursor(75, 56);
-  M5.Display.printf("%02u:%02u", sec / 60, sec % 60);
+  M5.Display.setTextSize(2);
+  M5.Display.setCursor(8, 8);
+  M5.Display.print("STOPWATCH");
+  M5.Display.setTextSize(3);
+  M5.Display.setCursor(57, 56);
+  M5.Display.printf("%02u:%02u.%u", tenth / 600, tenth / 10 % 60, tenth % 10);
 }
 
 // SML のアクションはクラス型の callable でなければならず、自由関数は渡せない。

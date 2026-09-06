@@ -25,11 +25,14 @@ inline uint32_t timerRemain(const TimerData& d) {
   return d.tm_base_ms - std::min(elapsed, d.tm_base_ms);
 }
 
-enum class TimerCursor { Min, Sec, None };
+enum class TimerCursor { Min, Sec };
 
-inline void drawTimer(int mm, int ss, TimerCursor cursor) {
-  M5.Display.setTextSize(3);
+inline void drawTimerSet(int mm, int ss, TimerCursor cursor) {
   M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
+  M5.Display.setTextSize(2);
+  M5.Display.setCursor(8, 8);
+  M5.Display.print("TIMER SET");
+  M5.Display.setTextSize(3);
   M5.Display.setCursor(75, 56);
   M5.Display.printf("%02d:%02d", mm, ss);
   // 使わない側も毎回黒で塗るので、前の位置のカーソルが残らない。
@@ -37,6 +40,18 @@ inline void drawTimer(int mm, int ss, TimerCursor cursor) {
                       cursor == TimerCursor::Min ? TFT_WHITE : TFT_BLACK);
   M5.Display.fillRect(129, 84, 36, 3,
                       cursor == TimerCursor::Sec ? TFT_WHITE : TFT_BLACK);
+}
+
+inline void drawTimerRun(uint32_t rest_ms) {
+  // 切り上げる。切り捨てると残り 0.1 秒未満の間ずっと 00:00.0 と出てしまう。
+  const uint32_t tenth = (rest_ms + 99) / 100;
+  M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
+  M5.Display.setTextSize(2);
+  M5.Display.setCursor(8, 8);
+  M5.Display.print("TIMER");
+  M5.Display.setTextSize(3);
+  M5.Display.setCursor(57, 56);
+  M5.Display.printf("%02u:%02u.%u", tenth / 600, tenth / 10 % 60, tenth % 10);
 }
 
 const auto timerIsSet = [](const TimerData& d) {
@@ -57,10 +72,10 @@ const auto enterTimer = [](TimerData& d) {
 };
 
 const auto drawSetMin = [](const TimerData& d) {
-  drawTimer(d.set_min, d.set_sec, TimerCursor::Min);
+  drawTimerSet(d.set_min, d.set_sec, TimerCursor::Min);
 };
 const auto drawSetSec = [](const TimerData& d) {
-  drawTimer(d.set_min, d.set_sec, TimerCursor::Sec);
+  drawTimerSet(d.set_min, d.set_sec, TimerCursor::Sec);
 };
 
 const auto incMin = [](TimerData& d) { d.set_min = (d.set_min + 1) % 100; };
@@ -68,10 +83,12 @@ const auto decMin = [](TimerData& d) { d.set_min = (d.set_min + 99) % 100; };
 const auto incSec = [](TimerData& d) { d.set_sec = (d.set_sec + 1) % 60; };
 const auto decSec = [](TimerData& d) { d.set_sec = (d.set_sec + 59) % 60; };
 
-const auto startTimer = [](TimerData& d) {
+const auto enterRun = [](TimerData& d) {
   d.tm_base_ms = static_cast<uint32_t>(d.set_min * 60 + d.set_sec) * 1000;
   d.tm_start_ms = millis();
   d.tm_running = true;
+  // 設定画面から桁数も画面名も変わるので消す。
+  M5.Display.clear();
 };
 
 // 残りを再計算し、0 になった瞬間にビープを始めて描き直す。
@@ -83,10 +100,7 @@ const auto tickTimer = [](TimerData& d) {
     d.tm_beeping = true;
     M5.Speaker.tone(2000);
   }
-  // 切り上げる。切り捨てると残り 1 秒未満の間ずっと 00:00 と出てしまう。
-  const uint32_t sec = (rest + 999) / 1000;
-  drawTimer(static_cast<int>(sec / 60), static_cast<int>(sec % 60),
-            TimerCursor::None);
+  drawTimerRun(rest);
 };
 
 const auto stopBeep = [](TimerData& d) {
@@ -104,12 +118,13 @@ const auto resumeTimer = [](TimerData& d) {
   d.tm_running = true;
 };
 
-// 設定画面へ戻るときに鳴りっぱなしにしない。
+// 設定画面へ戻るときに鳴りっぱなしにしない。桁数も画面名も変わるので消す。
 const auto leaveRun = [](TimerData& d) {
   if (d.tm_beeping) {
     M5.Speaker.stop();
     d.tm_beeping = false;
   }
+  M5.Display.clear();
 };
 
 struct timer {
@@ -129,7 +144,7 @@ struct timer {
         "setSec"_s + event<Tick> / drawSetSec,
         "setSec"_s + event<ClickA> / incSec,
         "setSec"_s + event<ClickB> / decSec,
-        "setSec"_s + event<HoldA>[timerIsSet] / startTimer = "run"_s,
+        "setSec"_s + event<HoldA>[timerIsSet] / enterRun = "run"_s,
         "setSec"_s + event<HoldB> = "setMin"_s,
 
         "run"_s + event<Tick> / tickTimer,
