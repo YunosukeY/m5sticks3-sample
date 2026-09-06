@@ -10,8 +10,9 @@
       "build":        "pio run",
       "upload":       "pio run --target upload",
       "monitor":      "pio device monitor",
-      "format":       "find src lib include -type f \\( -name '*.cpp' -o -name '*.h' \\) 2>/dev/null | xargs -r clang-format -i",
-      "format:check": "find src lib include -type f \\( -name '*.cpp' -o -name '*.h' \\) 2>/dev/null | xargs -r clang-format --dry-run --Werror",
+      "test":         "pio test -e native",
+      "format":       "find src lib include test -type f \\( -name '*.cpp' -o -name '*.h' \\) 2>/dev/null | xargs -r clang-format -i",
+      "format:check": "find src lib include test -type f \\( -name '*.cpp' -o -name '*.h' \\) 2>/dev/null | xargs -r clang-format --dry-run --Werror",
       "lint:sh":      "shellcheck scripts/*.sh"
     }
   }

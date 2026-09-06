@@ -27,4 +27,5 @@ jobs:
       # 速いものから走らせる。
       - run: devbox run format:check
       - run: devbox run lint:sh
+      - run: devbox run test
       - run: devbox run build
