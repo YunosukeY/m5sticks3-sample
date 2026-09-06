@@ -1,30 +1,35 @@
 #include <M5Unified.h>
 
-static bool beeping = false;
+#include <boost/sml.hpp>
+
+#include "events.h"
+#include "menu.h"
+
+namespace sml = boost::sml;
+
+static MenuData menu_data{MenuCursor::Stopwatch};
+static StopwatchData stopwatch_data{0, 0};
+static TimerData timer_data{0, 0, 0, 0, false, false};
+
+static sml::sm<app> machine{menu_data, stopwatch_data, timer_data};
 
 void setup() {
   auto cfg = M5.config();
   M5.begin(cfg);
 
+  M5.Display.setRotation(1);
   M5.Speaker.setVolume(255);
-
-  Serial.println("BtnA: toggle beep");
 }
 
 void loop() {
   M5.update();
 
-  // wasClicked() は長押し閾値(既定 500ms)未満で離したときに true になる。
-  if (M5.BtnA.wasClicked()) {
-    beeping = !beeping;
-    if (beeping) {
-      // duration 省略時は停止するまで鳴り続ける。
-      M5.Speaker.tone(1000);
-    } else {
-      M5.Speaker.stop();
-    }
-    Serial.printf("beep: %s\n", beeping ? "on" : "off");
-  }
+  if (M5.BtnA.wasClicked()) machine.process_event(ClickA{});
+  if (M5.BtnB.wasClicked()) machine.process_event(ClickB{});
+  if (M5.BtnA.wasHold()) machine.process_event(HoldA{});
+  if (M5.BtnB.wasHold()) machine.process_event(HoldB{});
+
+  machine.process_event(Tick{});
 
   delay(10);
 }
