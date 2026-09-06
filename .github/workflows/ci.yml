@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  ci:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: jetify-com/devbox-install-action@v0.15.0
+        with:
+          enable-cache: true
+
+      # 取得をキャッシュ（展開は毎回走る）。
+      - uses: actions/cache@v6.1.0
+        with:
+          path: |
+            ~/.platformio/.cache
+            .pio/libdeps
+          key: pio-${{ hashFiles('platformio.ini') }}
+          restore-keys: pio-
+
+      # 速いものから走らせる。
+      - run: devbox run format:check
+      - run: devbox run lint:sh
+      - run: devbox run build
