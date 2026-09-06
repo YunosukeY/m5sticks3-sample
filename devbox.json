@@ -2,15 +2,17 @@
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.18.0/.schema/devbox.schema.json",
   "packages": [
     "platformio@6.1.19",
-    "clang-tools@21.1.8"
+    "clang-tools@21.1.8",
+    "shellcheck@0.11.0"
   ],
   "shell": {
     "scripts": {
-      "build":  "pio run",
-      "upload": "pio run --target upload",
-      "monitor": "pio device monitor",
-      "format": "find src lib include -type f \\( -name '*.cpp' -o -name '*.h' \\) 2>/dev/null | xargs -r clang-format -i",
-      "format:check": "find src lib include -type f \\( -name '*.cpp' -o -name '*.h' \\) 2>/dev/null | xargs -r clang-format --dry-run --Werror"
+      "build":        "pio run",
+      "upload":       "pio run --target upload",
+      "monitor":      "pio device monitor",
+      "format":       "find src lib include -type f \\( -name '*.cpp' -o -name '*.h' \\) 2>/dev/null | xargs -r clang-format -i",
+      "format:check": "find src lib include -type f \\( -name '*.cpp' -o -name '*.h' \\) 2>/dev/null | xargs -r clang-format --dry-run --Werror",
+      "lint:sh":      "shellcheck scripts/*.sh"
     }
   }
 }
